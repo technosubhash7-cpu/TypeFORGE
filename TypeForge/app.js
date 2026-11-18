@@ -1,0 +1,48 @@
+const lessonData = [
+  ["Home row: F and J","Find the home keys and learn the correct resting position.","f j f j ff jj fj jf"],
+  ["Home row: D and K","Add the middle fingers while keeping your hands centred.","d k d k dd kk dk kd"],
+  ["Home row: S and L","Practise the ring fingers with steady, controlled movement.","s l s l ss ll sl ls"],
+  ["Home row: A and ;","Complete the home row and practise short combinations.","a ; a ; aa ;; asdf jkl;"],
+  ["Home row words","Build confidence using common home-row combinations.","sad fall ask flask salad lads"],
+  ["Top row: E and I","Reach upward with your middle fingers, then return to home row.","e i e i ee ii de ki lie"],
+  ["Top row: R and U","Practise the index-finger reaches on the top row.","r u r u rr uu run true rule"],
+  ["Top row: T and O","Add two more top-row keys without looking down.","t o t o to too tool root"],
+  ["Top row combinations","Mix top-row and home-row keys in short words.","quiet route editor routine letter"],
+  ["Bottom row: C and comma","Reach down carefully and return your fingers to home row.","c , c , cc ,, can come, nice,"],
+  ["Bottom row: V and M","Practise the lower row with relaxed finger movement.","v m v m move minimum vivid"],
+  ["Full keyboard review","Combine all three letter rows in useful sentences.","The quick brown fox jumps over the lazy dog."]
+];
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const storeKey = "typeforge-data-v1";
+let data = JSON.parse(localStorage.getItem(storeKey) || '{"completed":[],"tests":[]}');
+let activeLesson = null, duration = 60, remaining = 60, interval = null, startedAt = null, finished = false;
+let promptText = "The best way to improve your typing is to practise a little every day. Keep your fingers close to the home row, look at the screen, and focus on accuracy before speed. With patience and consistency, your confidence will grow.";
+const save = () => localStorage.setItem(storeKey, JSON.stringify(data));
+const esc = s => s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+function go(view){$$(".view").forEach(v=>v.classList.add("hidden"));$("#"+view+"-view").classList.remove("hidden");$$(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.view===view));$("#page-title").textContent={dashboard:"Dashboard",lessons:"Lessons",practice:"Practice",statistics:"Statistics"}[view];if(view==="statistics")renderStats();}
+$$(".nav-item").forEach(b=>b.addEventListener("click",()=>go(b.dataset.view)));
+$$("[data-goto]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.goto)));
+function renderLessons(){
+  const make=(item,i)=>`<article class="lesson-card"><div class="lesson-card-top"><span class="lesson-number">${String(i+1).padStart(2,"0")}</span><span class="muted">${data.completed.includes(i)?"✓ Completed":"Beginner"}</span></div><h3>${item[0]}</h3><p>${item[1]}</p><button data-lesson="${i}">${data.completed.includes(i)?"Practise again":"Start lesson →"}</button></article>`;
+  $("#all-lessons").innerHTML=lessonData.map(make).join("");
+  $("#dashboard-lessons").innerHTML=lessonData.slice(0,4).map((x,i)=>`<div class="lesson-row"><span class="lesson-number">${String(i+1).padStart(2,"0")}</span><div><b>${x[0]}</b><small>${x[1]}</small></div><span class="row-status">${data.completed.includes(i)?"✓":"Start →"}</span></div>`).join("");
+  $$("[data-lesson]").forEach(b=>b.addEventListener("click",()=>startLesson(+b.dataset.lesson)));
+}
+function startLesson(i){activeLesson=i;promptText=lessonData[i][2];resetTest();go("practice");$("#typing-status").textContent=`Lesson ${i+1}: ${lessonData[i][0]}`;$("#typing-input").focus();}
+function stats(){
+ const tests=data.tests;return {best:tests.length?Math.max(...tests.map(t=>t.wpm)):0,avg:tests.length?Math.round(tests.reduce((a,t)=>a+t.accuracy,0)/tests.length):null};
+}
+function renderDashboard(){const s=stats();$("#best-wpm").innerHTML=`${s.best} <small>WPM</small>`;$("#avg-accuracy").innerHTML=`${s.avg??"—"} <small>%</small>`;$("#completed-count").innerHTML=`${data.completed.length} <small>/ 12</small>`;$("#session-count").textContent=data.tests.length;$("#goal-progress").textContent=`${Math.min(s.best,30)} / 30 WPM`;$("#goal-fill").style.width=Math.min(100,s.best/30*100)+"%";renderLessons();}
+function renderStats(){const s=stats();$("#stats-best").innerHTML=`${s.best} <small>WPM</small>`;$("#stats-accuracy").innerHTML=`${s.avg??"—"} <small>%</small>`;$("#stats-lessons").innerHTML=`${data.completed.length} <small>/ 12</small>`;$("#stats-sessions").textContent=data.tests.length;$("#history-list").innerHTML=data.tests.length?[...data.tests].reverse().slice(0,12).map(t=>`<div class="history-row"><b>${t.wpm} WPM <span>· ${t.accuracy}% accuracy</span></b><span>${new Date(t.date).toLocaleString()}</span></div>`).join(""):'<p class="muted">No tests yet. Complete a typing test to see your results here.</p>';}
+function renderPrompt(typed=""){let html="";for(let i=0;i<promptText.length;i++){let cls=i<typed.length?(typed[i]===promptText[i]?"correct":"incorrect"):(i===typed.length?"current":"");html+=`<span class="${cls}">${esc(promptText[i])}</span>`;}$("#typing-prompt").innerHTML=html;}
+function resetTest(){clearInterval(interval);interval=null;remaining=duration;startedAt=null;finished=false;$("#timer").textContent=formatTime(remaining);$("#typing-input").value="";$("#typing-input").disabled=false;$("#typing-status").textContent="Click the box and begin typing";$("#result-box").classList.add("hidden");renderPrompt();updateLive();}
+function formatTime(t){return `${String(Math.floor(t/60)).padStart(2,"0")}:${String(t%60).padStart(2,"0")}`;}
+function updateLive(){let typed=$("#typing-input").value;let elapsed=startedAt?Math.max(1,(Date.now()-startedAt)/1000):0;let correct=0;for(let i=0;i<typed.length;i++)if(typed[i]===promptText[i])correct++;let accuracy=typed.length?Math.round(correct/typed.length*100):100;let wpm=elapsed?Math.round((correct/5)/(elapsed/60)):0;$("#live-wpm").innerHTML=`${wpm} <small>WPM</small>`;$("#live-accuracy").innerHTML=`${accuracy}<small>%</small>`;$("#live-chars").textContent=typed.length;renderPrompt(typed);return {wpm,accuracy,typed,correct};}
+function finishTest(){if(finished)return;finished=true;clearInterval(interval);interval=null;$("#typing-input").disabled=true;let r=updateLive();if(r.typed.length){data.tests.push({wpm:r.wpm,accuracy:r.accuracy,date:new Date().toISOString()});save();}if(activeLesson!==null&&r.typed.length>=promptText.length&&r.accuracy>=85){if(!data.completed.includes(activeLesson))data.completed.push(activeLesson);save();activeLesson=null;renderDashboard();}$("#result-wpm").innerHTML=`${r.wpm} <small>WPM</small>`;$("#result-detail").textContent=`${r.accuracy}% accuracy · ${r.correct} correct characters. ${r.accuracy>=95?"Excellent accuracy!":"Keep practising for more accuracy."}`;$("#result-box").classList.remove("hidden");$("#typing-status").textContent="Test complete — results saved on this device.";renderDashboard();}
+$("#typing-input").addEventListener("input",()=>{if(finished)return;if(!startedAt){startedAt=Date.now();interval=setInterval(()=>{remaining--;$("#timer").textContent=formatTime(remaining);if(remaining<=0)finishTest();},1000);}let r=updateLive();if(r.typed.length>=promptText.length)finishTest();});
+$$(".duration").forEach(b=>b.addEventListener("click",()=>{$$(".duration").forEach(x=>x.classList.remove("active"));b.classList.add("active");duration=+b.dataset.time;resetTest();}));
+$("#reset-test").addEventListener("click",resetTest);$("#try-again").addEventListener("click",()=>{if(activeLesson===null)promptText="The best way to improve your typing is to practise a little every day. Keep your fingers close to the home row, look at the screen, and focus on accuracy before speed. With patience and consistency, your confidence will grow.";resetTest();$("#typing-input").focus();});
+$("#start-learning").addEventListener("click",()=>startLesson(data.completed.length<12?data.completed.length:0));
+$("#theme-toggle").addEventListener("click",()=>document.body.classList.toggle("light"));
+renderDashboard();renderPrompt();
