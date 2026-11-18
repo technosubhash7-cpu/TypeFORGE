@@ -22,7 +22,11 @@
     <main class="main">
       <header class="topbar">
         <div><div class="eyebrow">YOUR TYPING WORKSPACE</div><h1 id="page-title">Dashboard</h1></div>
-        <div class="top-actions"><span class="status-dot"></span><span class="saved-label">Progress saved locally</span><button class="icon-btn" id="theme-toggle" title="Toggle theme">◐</button></div>
+        <div class="top-actions">
+          <span class="streak-pill" id="topbar-streak" title="Consecutive days practiced">🔥 0 day streak</span>
+          <span class="status-dot"></span><span class="saved-label">Saved locally</span>
+          <button class="icon-btn" id="theme-toggle" title="Toggle theme">◐</button>
+        </div>
       </header>
 
       <section id="dashboard-view" class="view">
@@ -36,7 +40,7 @@
           <article class="stat-card"><div class="stat-icon blue">⌁</div><span class="stat-label">Best speed</span><strong id="best-wpm">0 <small>WPM</small></strong><span class="stat-foot">Your personal record</span></article>
           <article class="stat-card"><div class="stat-icon purple">◎</div><span class="stat-label">Average accuracy</span><strong id="avg-accuracy">— <small>%</small></strong><span class="stat-foot">Across completed tests</span></article>
           <article class="stat-card"><div class="stat-icon green">✓</div><span class="stat-label">Lessons completed</span><strong id="completed-count">0 <small>/ 24</small></strong><span class="stat-foot">Keep your streak moving</span></article>
-          <article class="stat-card"><div class="stat-icon orange">◷</div><span class="stat-label">Practice sessions</span><strong id="session-count">0</strong><span class="stat-foot">Every session counts</span></article>
+          <article class="stat-card"><div class="stat-icon orange">🔥</div><span class="stat-label">Daily streak</span><strong id="dash-streak">0 <small>days</small></strong><span class="stat-foot" id="dash-streak-sub">Practice today to start</span></article>
         </div>
 
         <div class="content-grid">
@@ -114,12 +118,39 @@
       </section>
 
       <section id="statistics-view" class="view hidden">
-        <div class="page-intro"><div><div class="eyebrow">MEASURE YOUR IMPROVEMENT</div><h2>Your statistics</h2><p>Your results and keystroke accuracy are stored locally in this browser.</p></div></div>
+        <div class="page-intro">
+          <div><div class="eyebrow">MEASURE YOUR IMPROVEMENT</div><h2>Your statistics</h2><p>Track your speed progression, daily consistency, and keystroke accuracy.</p></div>
+          <div class="footer-btns">
+            <button class="secondary-btn" id="export-data">↓ Export JSON</button>
+            <label class="secondary-btn import-label" for="import-file">↑ Import JSON</label>
+            <input type="file" id="import-file" accept=".json,application/json" class="hidden">
+          </div>
+        </div>
+
         <div class="stats-grid">
-          <article class="stat-card"><div class="stat-icon blue">⌁</div><span class="stat-label">Best speed</span><strong id="stats-best">0 <small>WPM</small></strong><span class="stat-foot">Personal best</span></article>
-          <article class="stat-card"><div class="stat-icon purple">◎</div><span class="stat-label">Average accuracy</span><strong id="stats-accuracy">— <small>%</small></strong><span class="stat-foot">Test average</span></article>
+          <article class="stat-card"><div class="stat-icon blue">⌁</div><span class="stat-label">Best speed</span><strong id="stats-best">0 <small>WPM</small></strong><span class="stat-foot" id="stats-avg-wpm">Average: 0 WPM</span></article>
+          <article class="stat-card"><div class="stat-icon purple">◎</div><span class="stat-label">Average accuracy</span><strong id="stats-accuracy">— <small>%</small></strong><span class="stat-foot">Across all sessions</span></article>
           <article class="stat-card"><div class="stat-icon green">✓</div><span class="stat-label">Lessons completed</span><strong id="stats-lessons">0 <small>/ 24</small></strong><span class="stat-foot">Learning path</span></article>
-          <article class="stat-card"><div class="stat-icon orange">◷</div><span class="stat-label">Tests completed</span><strong id="stats-sessions">0</strong><span class="stat-foot">Practice sessions</span></article>
+          <article class="stat-card"><div class="stat-icon orange">🔥</div><span class="stat-label">Current / Best streak</span><strong id="stats-streak">0 <small>/ 0d</small></strong><span class="stat-foot" id="stats-sessions-foot">0 total sessions</span></article>
+        </div>
+
+        <div class="stats-two-col">
+          <section class="panel chart-panel">
+            <div class="panel-head">
+              <div><div class="eyebrow">SPEED & ACCURACY TREND</div><h3>Recent 15 sessions</h3></div>
+              <div class="chart-legend"><span><i class="dot-wpm"></i> WPM</span><span><i class="dot-acc"></i> Accuracy %</span></div>
+            </div>
+            <div id="trend-chart" class="trend-chart"><p class="muted">Complete at least 2 sessions to view your speed & accuracy graph.</p></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div><div class="eyebrow">CONSISTENCY</div><h3>Last 7 days</h3></div>
+              <span class="muted" id="week-sessions-count">0 this week</span>
+            </div>
+            <div id="week-strip" class="week-strip"></div>
+            <div class="tip-box" style="margin-top:18px"><span>✦</span><div><b>Consistency beats intensity</b><p>10 minutes daily builds stronger muscle memory than a single 1-hour session once a week.</p></div></div>
+          </section>
         </div>
 
         <section class="panel history-panel">
