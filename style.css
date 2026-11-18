@@ -36,3 +36,29 @@ body.light .filter-chip{background:#fff;color:#5a6880}
 body.light .filter-chip.active{background:#dce6fb;color:#25395f;border-color:#789dff}
 body.light .module-badge{background:#e6eeff;color:#3b5ea8}
 body.light .passage-select{background:#eef1f7;color:#25395f}
+
+/* V1.3 Smart Training & Weak-Key Analytics */
+.smart-btn{border:1px solid #5977b8;background:linear-gradient(120deg,#243454,#312b54);color:#c7d8ff;border-radius:8px;padding:7px 11px;font:700 11px 'DM Sans',sans-serif;cursor:pointer;transition:.15s}
+.smart-btn:hover{border-color:#8eb2ff;color:#fff;transform:translateY(-1px)}
+.smart-box{background:#222d40;border-radius:10px;padding:13px;margin-top:20px}
+.smart-box-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.smart-box-head b{font-size:12px;display:block;margin-top:2px}
+.weak-pills{display:flex;flex-wrap:wrap;gap:6px}
+.weak-pill{display:inline-flex;align-items:center;gap:6px;background:#182030;border:1px solid #354563;padding:5px 9px;border-radius:7px;font-size:11px}
+.weak-pill kbd{font:700 11px 'Space Grotesk',sans-serif;color:#ff8f9c;background:#3a2330;padding:1px 6px;border-radius:4px}
+.weak-pill span{color:var(--muted);font-size:10px}
+.weak-key-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.weak-card{background:#141a26;border:1px solid var(--line);border-radius:11px;padding:14px}
+.weak-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.weak-keycap{width:34px;height:34px;border-radius:8px;background:#263147;border:1px solid #495d84;display:grid;place-items:center;font:700 15px 'Space Grotesk';color:#fff}
+.weak-rate{font:700 13px 'Space Grotesk';color:#ff8594}
+.weak-bar{height:6px;background:#252f42;border-radius:6px;overflow:hidden;margin:8px 0}
+.weak-bar span{display:block;height:100%;background:linear-gradient(90deg,#ffb66d,#ff6b81);border-radius:6px}
+.weak-meta{display:flex;justify-content:space-between;font-size:10px;color:var(--muted)}
+.session-misses{margin:10px 0 14px;font-size:11px;color:#ffb4be}
+body.light .smart-box{background:#f1f4fa}
+body.light .weak-pill,body.light .weak-card{background:#f7f9fd;border-color:#dce3f0}
+body.light .weak-keycap{background:#e4ecfb;color:#1e293b;border-color:#b8c9eb}
+body.light .smart-btn{background:#e6eeff;color:#2c4a8a;border-color:#9bb6eb}
+@media(max-width:900px){.weak-key-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.weak-key-grid{grid-template-columns:1fr}}
