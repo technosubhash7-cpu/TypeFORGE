@@ -133,6 +133,57 @@ let maxCheckedIndex = 0, sessionMistakes = {};
 const save = () => localStorage.setItem(storeKey, JSON.stringify(data));
 const esc = s => s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
 
+// Local YYYY-MM-DD helper for accurate daily streaks
+function dayKey(dateObj = new Date()){
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const d = String(dateObj.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function computeStreaks(){
+  const countsByDay = {};
+  data.tests.forEach(t => {
+    const k = dayKey(new Date(t.date));
+    countsByDay[k] = (countsByDay[k] || 0) + 1;
+  });
+
+  const uniqueDays = Object.keys(countsByDay).sort();
+  if(!uniqueDays.length) return {current: 0, best: 0, practicedToday: false, countsByDay};
+
+  // Best streak across history
+  let best = 1, run = 1;
+  for(let i = 1; i < uniqueDays.length; i++){
+    const prev = new Date(uniqueDays[i - 1] + "T00:00:00");
+    const curr = new Date(uniqueDays[i] + "T00:00:00");
+    const diffDays = Math.round((curr - prev) / 86400000);
+    if(diffDays === 1){
+      run++;
+      if(run > best) best = run;
+    } else {
+      run = 1;
+    }
+  }
+
+  // Current streak (valid if practiced today or yesterday)
+  const todayStr = dayKey(new Date());
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = dayKey(yesterday);
+  const practicedToday = Boolean(countsByDay[todayStr]);
+
+  let current = 0;
+  if(countsByDay[todayStr] || countsByDay[yesterdayStr]){
+    let cursor = new Date((countsByDay[todayStr] ? todayStr : yesterdayStr) + "T00:00:00");
+    while(countsByDay[dayKey(cursor)]){
+      current++;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+  }
+
+  return {current, best: Math.max(best, current), practicedToday, countsByDay};
+}
+
 function recordKeystroke(expectedChar, typedChar){
   if(!expectedChar || expectedChar === " ") return;
   const key = expectedChar.toLowerCase();
@@ -158,18 +209,16 @@ function getWeakKeys(limit = 6){
     .slice(0, limit);
 }
 
-function generateSmartDrillText(){
+function generateSmartDrill(){
   const weak = getWeakKeys(4);
   const targets = weak.length ? weak.map(w => w.key) : ["e", "t", "r", "i"];
   const chunks = [];
 
-  // Part 1: Focused rhythmic key pairs
   targets.forEach(k => {
     const partner = k === "f" ? "j" : (["a","s","d","f","q","w","e","r","z","x","c","v"].includes(k) ? "j" : "f");
     chunks.push(`${k}${k} ${k}${partner} ${partner}${k} ${k}${k}${partner}`);
   });
 
-  // Part 2: Real words containing the weak keys
   const matchingWords = drillWordBank.filter(w => targets.some(t => w.includes(t)));
   const pool = matchingWords.length >= 8 ? matchingWords : drillWordBank;
   for(let i = 0; i < 14; i++){
@@ -261,6 +310,7 @@ function stats(){
   const tests = data.tests;
   return {
     best: tests.length ? Math.max(...tests.map(t => t.wpm)) : 0,
+    avgWpm: tests.length ? Math.round(tests.reduce((a,t) => a + t.wpm, 0) / tests.length) : 0,
     avg: tests.length ? Math.round(tests.reduce((a,t) => a + t.accuracy, 0) / tests.length) : null
   };
 }
@@ -268,7 +318,6 @@ function stats(){
 function renderWeakKeysUI(){
   const weak = getWeakKeys(6);
 
-  // Dashboard compact pills
   const dashHost = $("#dash-weak-keys");
   if(dashHost){
     dashHost.innerHTML = weak.length
@@ -276,7 +325,6 @@ function renderWeakKeysUI(){
       : '<span class="muted">Complete a lesson or test to detect weak keys.</span>';
   }
 
-  // Statistics full diagnostic grid
   const statsHost = $("#weak-key-grid");
   if(statsHost){
     statsHost.innerHTML = weak.length
@@ -296,13 +344,106 @@ function renderWeakKeysUI(){
   }
 }
 
+function renderTrendChart(){
+  const host = $("#trend-chart");
+  if(!host) return;
+  const recent = data.tests.slice(-15);
+  if(recent.length < 2){
+    host.innerHTML = '<p class="muted">Complete at least 2 sessions to view your speed & accuracy graph.</p>';
+    return;
+  }
+
+  const W = 540, H = 180, padL = 32, padR = 14, padT = 18, padB = 26;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+  const maxWpm = Math.max(40, Math.ceil(Math.max(...recent.map(t => t.wpm)) / 10) * 10);
+
+  const xAt = i => padL + (i / (recent.length - 1)) * plotW;
+  const yWpm = v => padT + plotH - (v / maxWpm) * plotH;
+  const yAcc = v => padT + plotH - (v / 100) * plotH;
+
+  const wpmPoints = recent.map((t, i) => `${xAt(i).toFixed(1)},${yWpm(t.wpm).toFixed(1)}`).join(" ");
+  const accPoints = recent.map((t, i) => `${xAt(i).toFixed(1)},${yAcc(t.accuracy).toFixed(1)}`).join(" ");
+  const areaPoints = `${padL},${padT + plotH} ${wpmPoints} ${xAt(recent.length - 1).toFixed(1)},${padT + plotH}`;
+
+  const gridLines = [0, 0.5, 1].map(f => {
+    const y = (padT + plotH * (1 - f)).toFixed(1);
+    const label = Math.round(maxWpm * f);
+    return `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#2a3345" stroke-dasharray="3 3"/><text x="${padL - 6}" y="${+y + 3}" text-anchor="end" fill="#7e8ba2" font-size="9">${label}</text>`;
+  }).join("");
+
+  const dots = recent.map((t, i) => {
+    const cx = xAt(i).toFixed(1), cy = yWpm(t.wpm).toFixed(1);
+    const dateStr = new Date(t.date).toLocaleDateString(undefined, {month:"short", day:"numeric"});
+    return `
+      <circle cx="${cx}" cy="${yAcc(t.accuracy).toFixed(1)}" r="3" fill="#a58bff"/>
+      <circle class="wpm-node" data-idx="${i}" cx="${cx}" cy="${cy}" r="4.5" fill="#6c9cff" stroke="#10131d" stroke-width="1.5" style="cursor:pointer"/>
+      ${(i === 0 || i === recent.length - 1 || i === Math.floor(recent.length / 2))
+        ? `<text x="${cx}" y="${H - 6}" text-anchor="middle" fill="#7e8ba2" font-size="9">${dateStr}</text>` : ""}`;
+  }).join("");
+
+  host.innerHTML = `
+    <div id="chart-tooltip" class="chart-tooltip hidden"></div>
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="wpmFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#6c9cff" stop-opacity="0.28"/>
+          <stop offset="100%" stop-color="#6c9cff" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      ${gridLines}
+      <polygon points="${areaPoints}" fill="url(#wpmFill)"/>
+      <polyline points="${accPoints}" fill="none" stroke="#a58bff" stroke-width="2" stroke-dasharray="4 3"/>
+      <polyline points="${wpmPoints}" fill="none" stroke="#6c9cff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      ${dots}
+    </svg>`;
+
+  const tip = $("#chart-tooltip");
+  host.querySelectorAll(".wpm-node").forEach(node => {
+    node.addEventListener("mouseenter", () => {
+      const t = recent[+node.dataset.idx];
+      tip.textContent = `${t.wpm} WPM · ${t.accuracy}% acc (${new Date(t.date).toLocaleDateString()})`;
+      tip.classList.remove("hidden");
+    });
+    node.addEventListener("mouseleave", () => tip.classList.add("hidden"));
+  });
+}
+
+function renderWeekStrip(countsByDay){
+  const host = $("#week-strip");
+  if(!host) return;
+  const names = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  let weekTotal = 0;
+  const cells = [];
+
+  for(let offset = 6; offset >= 0; offset--){
+    const d = new Date();
+    d.setDate(d.getDate() - offset);
+    const key = dayKey(d);
+    const count = countsByDay[key] || 0;
+    weekTotal += count;
+    cells.push(`
+      <div class="day-col ${count > 0 ? "active" : ""} ${offset === 0 ? "today" : ""}">
+        <span class="day-name">${names[d.getDay()]}</span>
+        <div class="day-dot">${count > 0 ? "✓" : d.getDate()}</div>
+        <span class="day-count">${count ? count + "×" : "—"}</span>
+      </div>`);
+  }
+
+  host.innerHTML = cells.join("");
+  if($("#week-sessions-count")) $("#week-sessions-count").textContent = `${weekTotal} session${weekTotal === 1 ? "" : "s"} this week`;
+}
+
 function renderDashboard(){
   const s = stats();
+  const st = computeStreaks();
   const total = lessonData.length;
   $("#best-wpm").innerHTML = `${s.best} <small>WPM</small>`;
   $("#avg-accuracy").innerHTML = `${s.avg ?? "—"} <small>%</small>`;
   $("#completed-count").innerHTML = `${data.completed.length} <small>/ ${total}</small>`;
-  $("#session-count").textContent = data.tests.length;
+  $("#dash-streak").innerHTML = `${st.current} <small>day${st.current === 1 ? "" : "s"}</small>`;
+  $("#dash-streak-sub").textContent = st.practicedToday ? "Completed today ✓" : "Practice today to keep going";
+  $("#topbar-streak").textContent = `🔥 ${st.current} day streak`;
   $("#goal-progress").textContent = `${Math.min(s.best, 30)} / 30 WPM`;
   $("#goal-fill").style.width = Math.min(100, s.best / 30 * 100) + "%";
   renderLessons();
@@ -311,11 +452,16 @@ function renderDashboard(){
 
 function renderStats(){
   const s = stats();
+  const st = computeStreaks();
   const total = lessonData.length;
   $("#stats-best").innerHTML = `${s.best} <small>WPM</small>`;
+  $("#stats-avg-wpm").textContent = `Average: ${s.avgWpm} WPM`;
   $("#stats-accuracy").innerHTML = `${s.avg ?? "—"} <small>%</small>`;
   $("#stats-lessons").innerHTML = `${data.completed.length} <small>/ ${total}</small>`;
-  $("#stats-sessions").textContent = data.tests.length;
+  $("#stats-streak").innerHTML = `${st.current} <small>/ ${st.best}d best</small>`;
+  $("#stats-sessions-foot").textContent = `${data.tests.length} total session${data.tests.length === 1 ? "" : "s"}`;
+  renderTrendChart();
+  renderWeekStrip(st.countsByDay);
   renderWeakKeysUI();
   $("#history-list").innerHTML = data.tests.length
     ? [...data.tests].reverse().slice(0,12).map(t => `<div class="history-row"><b>${t.wpm} WPM <span>· ${t.accuracy}% accuracy${t.mode ? ` · ${t.mode}` : ""}</span></b><span>${new Date(t.date).toLocaleString()}</span></div>`).join("")
@@ -357,7 +503,6 @@ function formatTime(t){
 
 function updateLive(){
   let typed = $("#typing-input").value;
-  // Record keystroke telemetry only for newly reached character positions
   while(maxCheckedIndex < typed.length && maxCheckedIndex < promptText.length){
     recordKeystroke(promptText[maxCheckedIndex], typed[maxCheckedIndex]);
     maxCheckedIndex++;
@@ -411,7 +556,7 @@ function finishTest(){
     : (isSmartDrill ? "New smart drill →" : "Next passage →");
   $("#try-again").dataset.nextLesson = (completedLessonIndex !== null && completedLessonIndex + 1 < lessonData.length) ? completedLessonIndex + 1 : "";
   $("#result-box").classList.remove("hidden");
-  $("#typing-status").textContent = "Test complete — keystroke analytics updated.";
+  $("#typing-status").textContent = "Test complete — statistics & streak updated.";
   renderDashboard();
 }
 
@@ -460,6 +605,46 @@ $("#reset-key-stats").addEventListener("click", () => {
   save();
   renderStats();
   renderDashboard();
+});
+
+// Export & Import JSON progress backup
+$("#export-data").addEventListener("click", () => {
+  const payload = JSON.stringify({...data, exportedAt: new Date().toISOString(), app: "TypeForge"}, null, 2);
+  const blob = new Blob([payload], {type: "application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `typeforge-backup-${dayKey()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+$("#import-file").addEventListener("change", e => {
+  const file = e.target.files?.[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if(!Array.isArray(parsed.completed) || !Array.isArray(parsed.tests)){
+        alert("Invalid TypeForge backup file.");
+        return;
+      }
+      data = {
+        completed: parsed.completed,
+        tests: parsed.tests,
+        keyStats: parsed.keyStats && typeof parsed.keyStats === "object" ? parsed.keyStats : {}
+      };
+      save();
+      renderDashboard();
+      renderStats();
+      alert("Backup restored successfully!");
+    } catch {
+      alert("Could not read JSON file. Please check the file format.");
+    }
+    e.target.value = "";
+  };
+  reader.readAsText(file);
 });
 
 $("#reset-test").addEventListener("click", resetTest);
