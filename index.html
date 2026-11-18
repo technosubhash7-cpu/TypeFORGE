@@ -35,29 +35,59 @@
         <div class="stats-grid">
           <article class="stat-card"><div class="stat-icon blue">⌁</div><span class="stat-label">Best speed</span><strong id="best-wpm">0 <small>WPM</small></strong><span class="stat-foot">Your personal record</span></article>
           <article class="stat-card"><div class="stat-icon purple">◎</div><span class="stat-label">Average accuracy</span><strong id="avg-accuracy">— <small>%</small></strong><span class="stat-foot">Across completed tests</span></article>
-          <article class="stat-card"><div class="stat-icon green">✓</div><span class="stat-label">Lessons completed</span><strong id="completed-count">0 <small>/ 12</small></strong><span class="stat-foot">Keep your streak moving</span></article>
+          <article class="stat-card"><div class="stat-icon green">✓</div><span class="stat-label">Lessons completed</span><strong id="completed-count">0 <small>/ 24</small></strong><span class="stat-foot">Keep your streak moving</span></article>
           <article class="stat-card"><div class="stat-icon orange">◷</div><span class="stat-label">Practice sessions</span><strong id="session-count">0</strong><span class="stat-foot">Every session counts</span></article>
         </div>
 
         <div class="content-grid">
-          <section class="panel"><div class="panel-head"><div><div class="eyebrow">START WITH THE BASICS</div><h3>Learning path</h3></div><button class="text-btn" data-goto="lessons">View all →</button></div><div id="dashboard-lessons" class="lesson-list"></div></section>
+          <section class="panel"><div class="panel-head"><div><div class="eyebrow">UP NEXT IN YOUR COURSE</div><h3>Learning path</h3></div><button class="text-btn" data-goto="lessons">View all 24 →</button></div><div id="dashboard-lessons" class="lesson-list"></div></section>
           <section class="panel goal-panel"><div class="eyebrow">YOUR FIRST MILESTONE</div><h3>Reach 30 WPM</h3><p>Build a steady rhythm before chasing speed. Aim for 95% accuracy or higher.</p><div class="goal-track"><span id="goal-fill"></span></div><div class="goal-meta"><b id="goal-progress">0 / 30 WPM</b><span>Starter goal</span></div><div class="tip-box"><span>✦</span><div><b>Training tip</b><p>Look at the screen, not your keyboard. Accuracy first; speed follows.</p></div></div></section>
         </div>
       </section>
 
       <section id="lessons-view" class="view hidden">
-        <div class="page-intro"><div><div class="eyebrow">STEP-BY-STEP TRAINING</div><h2>Typing lessons</h2><p>Learn touch typing in a structured sequence. Finish each lesson to unlock your progress.</p></div><div class="pill">12 beginner lessons</div></div>
+        <div class="page-intro">
+          <div><div class="eyebrow">COMPLETE TOUCH-TYPING COURSE</div><h2>Typing lessons</h2><p>Master every row of the keyboard step by step. Score 85%+ accuracy to complete a lesson.</p></div>
+          <div class="pill" id="lessons-pill">24 structured lessons</div>
+        </div>
+        <div class="filter-bar" id="module-filters">
+          <button class="filter-chip active" data-module="all">All (24)</button>
+          <button class="filter-chip" data-module="Home Row">Home Row</button>
+          <button class="filter-chip" data-module="Top Row">Top Row</button>
+          <button class="filter-chip" data-module="Bottom Row">Bottom Row</button>
+          <button class="filter-chip" data-module="Capitals & Punctuation">Capitals & Punctuation</button>
+          <button class="filter-chip" data-module="Numbers">Numbers</button>
+          <button class="filter-chip" data-module="Symbols & Mastery">Symbols & Mastery</button>
+        </div>
         <div id="all-lessons" class="lesson-grid"></div>
       </section>
 
       <section id="practice-view" class="view hidden">
-        <div class="page-intro"><div><div class="eyebrow">PRACTICE AT YOUR PACE</div><h2>Typing practice</h2><p>Choose a duration, type the passage and review your results.</p></div></div>
+        <div class="page-intro"><div><div class="eyebrow">PRACTICE AT YOUR PACE</div><h2>Typing practice</h2><p>Choose a duration and passage style, type the text and review your results.</p></div></div>
         <div class="practice-layout">
           <section class="panel typing-panel">
-            <div class="test-toolbar"><div class="segmented"><button class="duration active" data-time="60">1 min</button><button class="duration" data-time="180">3 min</button><button class="duration" data-time="300">5 min</button></div><span class="timer" id="timer">01:00</span></div>
+            <div class="test-toolbar">
+              <div class="toolbar-group">
+                <div class="segmented"><button class="duration active" data-time="60">1 min</button><button class="duration" data-time="180">3 min</button><button class="duration" data-time="300">5 min</button></div>
+                <select id="passage-category" class="passage-select" aria-label="Passage category">
+                  <option value="all">Passage: Mixed</option>
+                  <option value="everyday">Everyday</option>
+                  <option value="office">Business & Office</option>
+                  <option value="tech">Tech & Coding</option>
+                  <option value="numbers">Numbers & Data</option>
+                </select>
+              </div>
+              <span class="timer" id="timer">01:00</span>
+            </div>
             <div class="typing-prompt" id="typing-prompt" aria-label="Text to type"></div>
             <textarea id="typing-input" placeholder="Start typing here…" spellcheck="false" autocapitalize="off"></textarea>
-            <div class="typing-footer"><span id="typing-status">Click the box and begin typing</span><button class="secondary-btn" id="reset-test">↻ Restart test</button></div>
+            <div class="typing-footer">
+              <span id="typing-status">Click the box and begin typing</span>
+              <div class="footer-btns">
+                <button class="secondary-btn" id="new-passage">⇄ New passage</button>
+                <button class="secondary-btn" id="reset-test">↻ Restart</button>
+              </div>
+            </div>
             <div class="keyboard-wrap">
               <div class="keyboard-heading"><div><b>Virtual keyboard</b><small>Follow the highlighted key and finger hint</small></div><span class="finger-legend">Left hand · Right hand</span></div>
               <div id="virtual-keyboard" class="virtual-keyboard" aria-label="On-screen keyboard"></div>
@@ -65,7 +95,7 @@
             </div>
             <div class="live-stats"><div><span>Speed</span><b id="live-wpm">0 <small>WPM</small></b></div><div><span>Accuracy</span><b id="live-accuracy">100<small>%</small></b></div><div><span>Characters</span><b id="live-chars">0</b></div></div>
           </section>
-          <aside class="panel practice-side"><div class="eyebrow">QUICK GUIDANCE</div><h3>Train smarter</h3><ul class="guidance"><li><span>01</span><div><b>Use every finger</b><small>Let each finger handle its own keys.</small></div></li><li><span>02</span><div><b>Stay relaxed</b><small>Keep wrists loose and shoulders down.</small></div></li><li><span>03</span><div><b>Accuracy comes first</b><small>Slow down if you start making mistakes.</small></div></li></ul><div class="result-box hidden" id="result-box"><div class="eyebrow">TEST COMPLETE</div><h3>Nice work!</h3><div class="result-number" id="result-wpm">0 <small>WPM</small></div><p id="result-detail"></p><button class="primary-btn" id="try-again">Try again →</button></div></aside>
+          <aside class="panel practice-side"><div class="eyebrow">QUICK GUIDANCE</div><h3>Train smarter</h3><ul class="guidance"><li><span>01</span><div><b>Use every finger</b><small>Let each finger handle its own keys.</small></div></li><li><span>02</span><div><b>Stay relaxed</b><small>Keep wrists loose and shoulders down.</small></div></li><li><span>03</span><div><b>Accuracy comes first</b><small>Slow down if you start making mistakes.</small></div></li></ul><div class="result-box hidden" id="result-box"><div class="eyebrow">TEST COMPLETE</div><h3>Nice work!</h3><div class="result-number" id="result-wpm">0 <small>WPM</small></div><p id="result-detail"></p><button class="primary-btn" id="try-again">Next passage →</button></div></aside>
         </div>
       </section>
 
@@ -74,7 +104,7 @@
         <div class="stats-grid">
           <article class="stat-card"><div class="stat-icon blue">⌁</div><span class="stat-label">Best speed</span><strong id="stats-best">0 <small>WPM</small></strong><span class="stat-foot">Personal best</span></article>
           <article class="stat-card"><div class="stat-icon purple">◎</div><span class="stat-label">Average accuracy</span><strong id="stats-accuracy">— <small>%</small></strong><span class="stat-foot">Test average</span></article>
-          <article class="stat-card"><div class="stat-icon green">✓</div><span class="stat-label">Lessons completed</span><strong id="stats-lessons">0 <small>/ 12</small></strong><span class="stat-foot">Learning path</span></article>
+          <article class="stat-card"><div class="stat-icon green">✓</div><span class="stat-label">Lessons completed</span><strong id="stats-lessons">0 <small>/ 24</small></strong><span class="stat-foot">Learning path</span></article>
           <article class="stat-card"><div class="stat-icon orange">◷</div><span class="stat-label">Tests completed</span><strong id="stats-sessions">0</strong><span class="stat-foot">Practice sessions</span></article>
         </div>
         <section class="panel history-panel"><div class="panel-head"><div><div class="eyebrow">RECENT ACTIVITY</div><h3>Recent typing tests</h3></div></div><div id="history-list" class="history-list"><p class="muted">No tests yet. Complete a typing test to see your results here.</p></div></section>
