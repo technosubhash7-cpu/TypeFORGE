@@ -20,3 +20,19 @@ body.light{--bg:#f2f5fb;--side:#fff;--panel:#fff;--panel2:#f7f9fd;--line:#e0e6f0
 .vkey.wide{max-width:65px}.vkey.space{max-width:250px;flex:5}.finger-hint{margin-top:10px;text-align:center;color:#a9c1ff;font-size:10px;min-height:15px}
 body.light .vkey{background:#eef2f9;color:#34425a;border-color:#d6deeb}
 @media(max-width:520px){.vkey{height:27px;font-size:8px;border-radius:4px}.key-row{gap:2px}.virtual-keyboard{gap:3px}.finger-legend{display:none}}
+
+/* V1.2 Module Filters & Practice Controls */
+.filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.filter-chip{border:1px solid var(--line);background:var(--panel);color:var(--muted);padding:7px 13px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;transition:.15s}
+.filter-chip:hover{border-color:#536b99;color:var(--text)}
+.filter-chip.active{background:#2c3d5e;border-color:#789dff;color:#fff}
+.module-badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#8faeff;background:#24334e;padding:3px 8px;border-radius:6px;margin-top:12px}
+.lesson-card h3{margin:8px 0 5px}
+.toolbar-group{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.passage-select{background:#111722;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:7px 11px;font:600 11px 'DM Sans',sans-serif;outline:none;cursor:pointer}
+.passage-select:focus{border-color:#789dff}
+.footer-btns{display:flex;gap:8px}
+body.light .filter-chip{background:#fff;color:#5a6880}
+body.light .filter-chip.active{background:#dce6fb;color:#25395f;border-color:#789dff}
+body.light .module-badge{background:#e6eeff;color:#3b5ea8}
+body.light .passage-select{background:#eef1f7;color:#25395f}
