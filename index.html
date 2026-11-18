@@ -41,7 +41,20 @@
 
         <div class="content-grid">
           <section class="panel"><div class="panel-head"><div><div class="eyebrow">UP NEXT IN YOUR COURSE</div><h3>Learning path</h3></div><button class="text-btn" data-goto="lessons">View all 24 →</button></div><div id="dashboard-lessons" class="lesson-list"></div></section>
-          <section class="panel goal-panel"><div class="eyebrow">YOUR FIRST MILESTONE</div><h3>Reach 30 WPM</h3><p>Build a steady rhythm before chasing speed. Aim for 95% accuracy or higher.</p><div class="goal-track"><span id="goal-fill"></span></div><div class="goal-meta"><b id="goal-progress">0 / 30 WPM</b><span>Starter goal</span></div><div class="tip-box"><span>✦</span><div><b>Training tip</b><p>Look at the screen, not your keyboard. Accuracy first; speed follows.</p></div></div></section>
+          <section class="panel goal-panel">
+            <div class="eyebrow">YOUR FIRST MILESTONE</div>
+            <h3>Reach 30 WPM</h3>
+            <p>Build a steady rhythm before chasing speed. Aim for 95% accuracy or higher.</p>
+            <div class="goal-track"><span id="goal-fill"></span></div>
+            <div class="goal-meta"><b id="goal-progress">0 / 30 WPM</b><span>Starter goal</span></div>
+            <div class="smart-box">
+              <div class="smart-box-head">
+                <div><div class="eyebrow">SMART TRAINING</div><b>Focus keys</b></div>
+                <button class="text-btn" id="dash-smart-drill">Train weak keys →</button>
+              </div>
+              <div id="dash-weak-keys" class="weak-pills"><span class="muted">Complete a lesson or test to detect weak keys.</span></div>
+            </div>
+          </section>
         </div>
       </section>
 
@@ -63,7 +76,7 @@
       </section>
 
       <section id="practice-view" class="view hidden">
-        <div class="page-intro"><div><div class="eyebrow">PRACTICE AT YOUR PACE</div><h2>Typing practice</h2><p>Choose a duration and passage style, type the text and review your results.</p></div></div>
+        <div class="page-intro"><div><div class="eyebrow">PRACTICE AT YOUR PACE</div><h2>Typing practice</h2><p>Choose a duration and passage style, or launch a personalized weak-key drill.</p></div></div>
         <div class="practice-layout">
           <section class="panel typing-panel">
             <div class="test-toolbar">
@@ -76,6 +89,7 @@
                   <option value="tech">Tech & Coding</option>
                   <option value="numbers">Numbers & Data</option>
                 </select>
+                <button class="smart-btn" id="smart-drill-btn" title="Generate a custom drill targeting your most missed keys">✦ Smart Drill</button>
               </div>
               <span class="timer" id="timer">01:00</span>
             </div>
@@ -95,18 +109,30 @@
             </div>
             <div class="live-stats"><div><span>Speed</span><b id="live-wpm">0 <small>WPM</small></b></div><div><span>Accuracy</span><b id="live-accuracy">100<small>%</small></b></div><div><span>Characters</span><b id="live-chars">0</b></div></div>
           </section>
-          <aside class="panel practice-side"><div class="eyebrow">QUICK GUIDANCE</div><h3>Train smarter</h3><ul class="guidance"><li><span>01</span><div><b>Use every finger</b><small>Let each finger handle its own keys.</small></div></li><li><span>02</span><div><b>Stay relaxed</b><small>Keep wrists loose and shoulders down.</small></div></li><li><span>03</span><div><b>Accuracy comes first</b><small>Slow down if you start making mistakes.</small></div></li></ul><div class="result-box hidden" id="result-box"><div class="eyebrow">TEST COMPLETE</div><h3>Nice work!</h3><div class="result-number" id="result-wpm">0 <small>WPM</small></div><p id="result-detail"></p><button class="primary-btn" id="try-again">Next passage →</button></div></aside>
+          <aside class="panel practice-side"><div class="eyebrow">QUICK GUIDANCE</div><h3>Train smarter</h3><ul class="guidance"><li><span>01</span><div><b>Use every finger</b><small>Let each finger handle its own keys.</small></div></li><li><span>02</span><div><b>Stay relaxed</b><small>Keep wrists loose and shoulders down.</small></div></li><li><span>03</span><div><b>Accuracy comes first</b><small>Slow down if you start making mistakes.</small></div></li></ul><div class="result-box hidden" id="result-box"><div class="eyebrow">TEST COMPLETE</div><h3>Nice work!</h3><div class="result-number" id="result-wpm">0 <small>WPM</small></div><p id="result-detail"></p><div id="session-misses" class="session-misses"></div><button class="primary-btn" id="try-again">Next passage →</button></div></aside>
         </div>
       </section>
 
       <section id="statistics-view" class="view hidden">
-        <div class="page-intro"><div><div class="eyebrow">MEASURE YOUR IMPROVEMENT</div><h2>Your statistics</h2><p>Your results are stored in this browser on this device.</p></div></div>
+        <div class="page-intro"><div><div class="eyebrow">MEASURE YOUR IMPROVEMENT</div><h2>Your statistics</h2><p>Your results and keystroke accuracy are stored locally in this browser.</p></div></div>
         <div class="stats-grid">
           <article class="stat-card"><div class="stat-icon blue">⌁</div><span class="stat-label">Best speed</span><strong id="stats-best">0 <small>WPM</small></strong><span class="stat-foot">Personal best</span></article>
           <article class="stat-card"><div class="stat-icon purple">◎</div><span class="stat-label">Average accuracy</span><strong id="stats-accuracy">— <small>%</small></strong><span class="stat-foot">Test average</span></article>
           <article class="stat-card"><div class="stat-icon green">✓</div><span class="stat-label">Lessons completed</span><strong id="stats-lessons">0 <small>/ 24</small></strong><span class="stat-foot">Learning path</span></article>
           <article class="stat-card"><div class="stat-icon orange">◷</div><span class="stat-label">Tests completed</span><strong id="stats-sessions">0</strong><span class="stat-foot">Practice sessions</span></article>
         </div>
+
+        <section class="panel history-panel">
+          <div class="panel-head">
+            <div><div class="eyebrow">SMART DIAGNOSTICS</div><h3>Weak-key analysis</h3></div>
+            <div class="footer-btns">
+              <button class="secondary-btn" id="reset-key-stats">Reset key data</button>
+              <button class="primary-btn" id="stats-smart-drill">Practice weak keys <span>→</span></button>
+            </div>
+          </div>
+          <div id="weak-key-grid" class="weak-key-grid"><p class="muted">Start typing lessons or practice tests to analyze your keystroke accuracy.</p></div>
+        </section>
+
         <section class="panel history-panel"><div class="panel-head"><div><div class="eyebrow">RECENT ACTIVITY</div><h3>Recent typing tests</h3></div></div><div id="history-list" class="history-list"><p class="muted">No tests yet. Complete a typing test to see your results here.</p></div></section>
       </section>
       <footer>TYPEFORGE <span>•</span> Practice consistently. Improve confidently.</footer>
