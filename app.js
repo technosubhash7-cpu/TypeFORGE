@@ -1,36 +1,25 @@
 // [Module, Title, Description, Practice Text]
 const lessonData = [
-  // Module 1: Home Row (0-4)
   ["Home Row", "Home row: F and J", "Find the home keys and learn the correct resting position.", "f j f j ff jj fj jf jff fjj fjf jfj"],
   ["Home Row", "Home row: D and K", "Add the middle fingers while keeping your hands centred.", "d k d k dd kk dk kd fjdk kdjf fjkd"],
   ["Home Row", "Home row: S and L", "Practise the ring fingers with steady, controlled movement.", "s l s l ss ll sl ls sdlk lkds fslj"],
   ["Home Row", "Home row: A and ;", "Complete the home row and practise short combinations.", "a ; a ; aa ;; asdf jkl; fdsa ;lkj"],
   ["Home Row", "Home row words & G, H", "Add index-finger reaches G and H to type full home-row words.", "sad fall ask flask salad lads glad hall dash flash"],
-
-  // Module 2: Top Row (5-8)
   ["Top Row", "Top row: E and I", "Reach upward with your middle fingers, then return to home row.", "e i e i ee ii de ki lie side life like"],
   ["Top Row", "Top row: R and U", "Practise the index-finger reaches on the top row.", "r u r u rr uu run true rule sure user"],
   ["Top Row", "Top row: T and O", "Add two more top-row keys without looking down.", "t o t o to too tool root store order"],
   ["Top Row", "Top row: Q, W, Y and P", "Complete the entire top letter row with smooth pinky and index reaches.", "quiet power your query write poetry yesterday"],
-
-  // Module 3: Bottom Row (9-12)
   ["Bottom Row", "Bottom row: C and comma", "Reach down carefully and return your fingers to home row.", "c , c , cc ,, can come, nice, cold, call,"],
   ["Bottom Row", "Bottom row: V and M", "Practise the lower index-finger reaches with relaxed movement.", "v m v m move minimum vivid silver moment"],
   ["Bottom Row", "Bottom row: B and N", "Stretch the index fingers cleanly to B and N without shifting wrists.", "bn nb ban name number cabin ribbon banner"],
   ["Bottom Row", "Bottom row: Z, X and period", "Finish all alphabet keys and end sentences cleanly with a period.", "zero next box. zone six. exact mix. lazy fox."],
-
-  // Module 4: Capitals & Punctuation (13-15)
   ["Capitals & Punctuation", "Left & right Shift keys", "Use the opposite hand's pinky to hold Shift for clean capital letters.", "Alice Bob Charlie David India Jaipur Sikar Delhi"],
   ["Capitals & Punctuation", "Apostrophes & quotation marks", "Practise right-pinky reaches for contractions and quoted speech.", "It's a great day. Don't rush; stay steady and \"focus\"."],
   ["Capitals & Punctuation", "Questions & exclamations", "Combine Shift with punctuation marks at the end of sentences.", "Ready to start? Keep going! Speed follows accuracy."],
-
-  // Module 5: Numbers (16-19)
   ["Numbers", "Numbers: 4, 5, 6 and 7", "Reach up from the index fingers to the center number keys.", "45 67 46 57 456 567 4756 6475 5467"],
   ["Numbers", "Numbers: 2, 3, 8 and 9", "Use your middle and ring fingers to reach the upper number row.", "23 89 28 39 238 892 3829 9283 2389"],
   ["Numbers", "Numbers: 1 and 0", "Stretch your left and right pinkies accurately to 1 and 0.", "10 100 101 2026 1990 1050 2010 1000"],
   ["Numbers", "Dates, times & invoices", "Type realistic numeric records, dates, and quantities.", "Invoice 1048 dated 18/11/2026 for 250 units at 14:30."],
-
-  // Module 6: Symbols & Mastery (20-23)
   ["Symbols & Mastery", "Hyphens, slashes & brackets", "Master common technical and formatting symbols on the right hand.", "well-known 24/7 [item-1] (active) /home/user/docs"],
   ["Symbols & Mastery", "Emails & web addresses", "Practise @, #, $, %, & and dots used in everyday digital work.", "support@typeforge.io #101 $45.00 100% fast & clean"],
   ["Symbols & Mastery", "The pangram sprint", "Every letter of the English alphabet in three classic pangrams.", "The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs."],
@@ -59,6 +48,21 @@ const practicePassages = {
     "Quarterly metrics rose by 14.8% in Q3 2026, reaching 12,450 active users across 38 cities with an average session duration of 4 minutes and 35 seconds."
   ]
 };
+
+const drillWordBank = [
+  "about","above","after","again","always","among","around","because","before","between","beyond","build",
+  "change","clear","common","complete","control","create","daily","design","develop","different","direct",
+  "during","early","energy","enough","every","example","experience","family","follow","form","future","general",
+  "ground","growth","habit","health","history","improve","include","industry","inside","interest","journey",
+  "keyboard","knowledge","language","learning","letter","level","market","memory","method","minute","modern",
+  "moment","motion","nature","network","number","object","office","order","pattern","people","perfect",
+  "period","person","place","point","power","practice","prepare","problem","process","program","project",
+  "quality","question","quick","quiet","reach","reason","record","report","result","return","rhythm","right",
+  "school","screen","second","section","service","should","signal","simple","skill","small","smooth","social",
+  "sound","source","space","speed","standard","start","steady","story","strong","structure","study","success",
+  "support","system","target","theory","thought","through","together","toward","training","travel","update",
+  "value","version","visual","voice","water","window","within","without","world","write","young","zero","zone"
+];
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -118,12 +122,79 @@ function renderKeyboard(nextChar = ""){
 }
 
 const storeKey = "typeforge-data-v1";
-let data = JSON.parse(localStorage.getItem(storeKey) || '{"completed":[],"tests":[]}');
-let activeLesson = null, selectedModule = "all", duration = 60, remaining = 60, interval = null, startedAt = null, finished = false;
+let data = JSON.parse(localStorage.getItem(storeKey) || '{"completed":[],"tests":[],"keyStats":{}}');
+if(!data.keyStats) data.keyStats = {};
+
+let activeLesson = null, isSmartDrill = false, selectedModule = "all";
+let duration = 60, remaining = 60, interval = null, startedAt = null, finished = false;
 let promptText = practicePassages.everyday[0];
+let maxCheckedIndex = 0, sessionMistakes = {};
 
 const save = () => localStorage.setItem(storeKey, JSON.stringify(data));
 const esc = s => s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+
+function recordKeystroke(expectedChar, typedChar){
+  if(!expectedChar || expectedChar === " ") return;
+  const key = expectedChar.toLowerCase();
+  if(!data.keyStats[key]) data.keyStats[key] = {hits: 0, misses: 0};
+  data.keyStats[key].hits++;
+  if(typedChar !== expectedChar){
+    data.keyStats[key].misses++;
+    sessionMistakes[key] = (sessionMistakes[key] || 0) + 1;
+  }
+}
+
+function getWeakKeys(limit = 6){
+  return Object.entries(data.keyStats)
+    .filter(([_, s]) => s.hits >= 3 && s.misses > 0)
+    .map(([key, s]) => ({
+      key,
+      hits: s.hits,
+      misses: s.misses,
+      rate: Math.round((s.misses / s.hits) * 100),
+      finger: (fingerMap[shiftSymbolMap[key] || key] || ["Nearby finger"])[0]
+    }))
+    .sort((a, b) => b.rate - a.rate || b.misses - a.misses)
+    .slice(0, limit);
+}
+
+function generateSmartDrillText(){
+  const weak = getWeakKeys(4);
+  const targets = weak.length ? weak.map(w => w.key) : ["e", "t", "r", "i"];
+  const chunks = [];
+
+  // Part 1: Focused rhythmic key pairs
+  targets.forEach(k => {
+    const partner = k === "f" ? "j" : (["a","s","d","f","q","w","e","r","z","x","c","v"].includes(k) ? "j" : "f");
+    chunks.push(`${k}${k} ${k}${partner} ${partner}${k} ${k}${k}${partner}`);
+  });
+
+  // Part 2: Real words containing the weak keys
+  const matchingWords = drillWordBank.filter(w => targets.some(t => w.includes(t)));
+  const pool = matchingWords.length >= 8 ? matchingWords : drillWordBank;
+  for(let i = 0; i < 14; i++){
+    chunks.push(pool[Math.floor(Math.random() * pool.length)]);
+  }
+
+  return {
+    text: chunks.join(" "),
+    targets,
+    isFallback: weak.length === 0
+  };
+}
+
+function launchSmartDrill(){
+  const drill = generateSmartDrill();
+  activeLesson = null;
+  isSmartDrill = true;
+  promptText = drill.text;
+  resetTest();
+  go("practice");
+  $("#typing-status").textContent = drill.isFallback
+    ? "Smart Drill: Starter accuracy warm-up (type more tests to unlock personalized weak-key drills)"
+    : `Smart Drill · Targeting your weak keys: ${drill.targets.map(k => k.toUpperCase()).join(", ")}`;
+  $("#typing-input").focus();
+}
 
 function pickPassage(cat = $("#passage-category")?.value || "all"){
   const pool = cat === "all" ? Object.values(practicePassages).flat() : (practicePassages[cat] || practicePassages.everyday);
@@ -137,6 +208,7 @@ function go(view){
   $$(".nav-item").forEach(b => b.classList.toggle("active", b.dataset.view === view));
   $("#page-title").textContent = {dashboard:"Dashboard",lessons:"Lessons",practice:"Practice",statistics:"Statistics"}[view];
   if(view === "statistics") renderStats();
+  if(view === "dashboard") renderDashboard();
 }
 
 $$(".nav-item").forEach(b => b.addEventListener("click", () => go(b.dataset.view)));
@@ -156,7 +228,6 @@ function renderLessons(){
       <button data-lesson="${i}">${data.completed.includes(i) ? "Practise again" : "Start lesson →"}</button>
     </article>`).join("");
 
-  // Show next 4 uncompleted lessons (or first 4 if all done) on Dashboard
   const upcoming = lessonData.map((item, i) => ({item, i})).filter(({i}) => !data.completed.includes(i));
   const dashList = (upcoming.length ? upcoming : lessonData.map((item, i) => ({item, i}))).slice(0, 4);
   $("#dashboard-lessons").innerHTML = dashList.map(({item, i}) => `
@@ -178,6 +249,7 @@ $$(".filter-chip").forEach(chip => chip.addEventListener("click", () => {
 
 function startLesson(i){
   activeLesson = i;
+  isSmartDrill = false;
   promptText = lessonData[i][3];
   resetTest();
   go("practice");
@@ -193,6 +265,37 @@ function stats(){
   };
 }
 
+function renderWeakKeysUI(){
+  const weak = getWeakKeys(6);
+
+  // Dashboard compact pills
+  const dashHost = $("#dash-weak-keys");
+  if(dashHost){
+    dashHost.innerHTML = weak.length
+      ? weak.slice(0, 4).map(w => `<div class="weak-pill"><kbd>${w.key.toUpperCase()}</kbd><span>${w.rate}% err</span></div>`).join("")
+      : '<span class="muted">Complete a lesson or test to detect weak keys.</span>';
+  }
+
+  // Statistics full diagnostic grid
+  const statsHost = $("#weak-key-grid");
+  if(statsHost){
+    statsHost.innerHTML = weak.length
+      ? weak.map(w => `
+        <div class="weak-card">
+          <div class="weak-card-top">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="weak-keycap">${w.key.toUpperCase()}</div>
+              <div><b style="font-size:12px">Key "${w.key.toUpperCase()}"</b><small style="display:block;color:var(--muted);font-size:10px">${w.finger}</small></div>
+            </div>
+            <span class="weak-rate">${w.rate}% error</span>
+          </div>
+          <div class="weak-bar"><span style="width:${Math.min(100, w.rate)}%"></span></div>
+          <div class="weak-meta"><span>${w.misses} misses</span><span>${w.hits} total presses</span></div>
+        </div>`).join("")
+      : '<p class="muted">No weak keys flagged yet. Type a few lessons or passages and your most missed keys will appear here.</p>';
+  }
+}
+
 function renderDashboard(){
   const s = stats();
   const total = lessonData.length;
@@ -203,6 +306,7 @@ function renderDashboard(){
   $("#goal-progress").textContent = `${Math.min(s.best, 30)} / 30 WPM`;
   $("#goal-fill").style.width = Math.min(100, s.best / 30 * 100) + "%";
   renderLessons();
+  renderWeakKeysUI();
 }
 
 function renderStats(){
@@ -212,8 +316,9 @@ function renderStats(){
   $("#stats-accuracy").innerHTML = `${s.avg ?? "—"} <small>%</small>`;
   $("#stats-lessons").innerHTML = `${data.completed.length} <small>/ ${total}</small>`;
   $("#stats-sessions").textContent = data.tests.length;
+  renderWeakKeysUI();
   $("#history-list").innerHTML = data.tests.length
-    ? [...data.tests].reverse().slice(0,12).map(t => `<div class="history-row"><b>${t.wpm} WPM <span>· ${t.accuracy}% accuracy</span></b><span>${new Date(t.date).toLocaleString()}</span></div>`).join("")
+    ? [...data.tests].reverse().slice(0,12).map(t => `<div class="history-row"><b>${t.wpm} WPM <span>· ${t.accuracy}% accuracy${t.mode ? ` · ${t.mode}` : ""}</span></b><span>${new Date(t.date).toLocaleString()}</span></div>`).join("")
     : '<p class="muted">No tests yet. Complete a typing test to see your results here.</p>';
 }
 
@@ -233,12 +338,14 @@ function resetTest(){
   remaining = duration;
   startedAt = null;
   finished = false;
+  maxCheckedIndex = 0;
+  sessionMistakes = {};
   $("#timer").textContent = formatTime(remaining);
   $("#typing-input").value = "";
   $("#typing-input").disabled = false;
   $("#typing-status").textContent = activeLesson !== null
     ? `Lesson ${activeLesson+1}: ${lessonData[activeLesson][1]}`
-    : "Click the box and begin typing";
+    : (isSmartDrill ? "Smart Drill active — focus on clean accuracy" : "Click the box and begin typing");
   $("#result-box").classList.add("hidden");
   renderPrompt();
   updateLive();
@@ -250,6 +357,12 @@ function formatTime(t){
 
 function updateLive(){
   let typed = $("#typing-input").value;
+  // Record keystroke telemetry only for newly reached character positions
+  while(maxCheckedIndex < typed.length && maxCheckedIndex < promptText.length){
+    recordKeystroke(promptText[maxCheckedIndex], typed[maxCheckedIndex]);
+    maxCheckedIndex++;
+  }
+
   let elapsed = startedAt ? Math.max(1, (Date.now() - startedAt) / 1000) : 0;
   let correct = 0;
   for(let i = 0; i < typed.length; i++) if(typed[i] === promptText[i]) correct++;
@@ -269,23 +382,36 @@ function finishTest(){
   interval = null;
   $("#typing-input").disabled = true;
   let r = updateLive();
+
+  const modeLabel = activeLesson !== null
+    ? `Lesson ${activeLesson + 1}`
+    : (isSmartDrill ? "Smart Drill" : "Practice");
+
   if(r.typed.length){
-    data.tests.push({wpm:r.wpm, accuracy:r.accuracy, date:new Date().toISOString()});
+    data.tests.push({wpm: r.wpm, accuracy: r.accuracy, mode: modeLabel, date: new Date().toISOString()});
     save();
   }
+
   const completedLessonIndex = activeLesson;
   if(activeLesson !== null && r.typed.length >= promptText.length && r.accuracy >= 85){
     if(!data.completed.includes(activeLesson)) data.completed.push(activeLesson);
     save();
     activeLesson = null;
-    renderDashboard();
   }
+
+  const missedList = Object.entries(sessionMistakes).sort((a,b) => b[1] - a[1]).slice(0, 4);
+  $("#session-misses").innerHTML = missedList.length
+    ? `Missed keys this session: <b>${missedList.map(([k,c]) => `${k.toUpperCase()} (${c}×)`).join(", ")}</b>`
+    : `<span style="color:var(--green)">Zero missed keys! Flawless run.</span>`;
+
   $("#result-wpm").innerHTML = `${r.wpm} <small>WPM</small>`;
   $("#result-detail").textContent = `${r.accuracy}% accuracy · ${r.correct} correct characters. ${r.accuracy >= 95 ? "Excellent accuracy!" : "Keep practising for more accuracy."}`;
-  $("#try-again").textContent = (completedLessonIndex !== null && completedLessonIndex + 1 < lessonData.length) ? "Next lesson →" : "Next passage →";
+  $("#try-again").textContent = (completedLessonIndex !== null && completedLessonIndex + 1 < lessonData.length)
+    ? "Next lesson →"
+    : (isSmartDrill ? "New smart drill →" : "Next passage →");
   $("#try-again").dataset.nextLesson = (completedLessonIndex !== null && completedLessonIndex + 1 < lessonData.length) ? completedLessonIndex + 1 : "";
   $("#result-box").classList.remove("hidden");
-  $("#typing-status").textContent = "Test complete — results saved on this device.";
+  $("#typing-status").textContent = "Test complete — keystroke analytics updated.";
   renderDashboard();
 }
 
@@ -312,15 +438,28 @@ $$(".duration").forEach(b => b.addEventListener("click", () => {
 
 $("#passage-category").addEventListener("change", () => {
   activeLesson = null;
+  isSmartDrill = false;
   promptText = pickPassage();
   resetTest();
 });
 
 $("#new-passage").addEventListener("click", () => {
   activeLesson = null;
+  isSmartDrill = false;
   promptText = pickPassage();
   resetTest();
   $("#typing-input").focus();
+});
+
+$("#smart-drill-btn").addEventListener("click", launchSmartDrill);
+$("#dash-smart-drill").addEventListener("click", launchSmartDrill);
+$("#stats-smart-drill").addEventListener("click", launchSmartDrill);
+
+$("#reset-key-stats").addEventListener("click", () => {
+  data.keyStats = {};
+  save();
+  renderStats();
+  renderDashboard();
 });
 
 $("#reset-test").addEventListener("click", resetTest);
@@ -329,6 +468,8 @@ $("#try-again").addEventListener("click", () => {
   const nextL = $("#try-again").dataset.nextLesson;
   if(nextL !== ""){
     startLesson(+nextL);
+  } else if(isSmartDrill){
+    launchSmartDrill();
   } else {
     activeLesson = null;
     promptText = pickPassage();
